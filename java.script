@@ -1,0 +1,220 @@
+import java.util.ArrayList;
+import java.util.Scanner;
+
+// Classe que representa o Chamado
+class Chamado {
+    private int numero;
+    private String solicitante;
+    private String descricao;
+    private String categoria;
+    private String prioridade;
+    private String status;
+
+    public Chamado(int numero, String solicitante, String descricao, String categoria, String prioridade, String status) {
+        this.numero = numero;
+        this.solicitante = solicitante;
+        this.descricao = descricao;
+        this.categoria = categoria;
+        this.prioridade = prioridade;
+        this.status = status;
+    }
+
+    // Getters e Setters
+    public int getNumero() { return numero; }
+    public String getPrioridade() { return prioridade; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    @Override
+    public String toString() {
+        return "Chamado #" + numero + 
+               " | Solicitante: " + solicitante + 
+               " | Descrição: " + descricao + 
+               " | Categoria: " + categoria + 
+               " | Prioridade: " + prioridade + 
+               " | Status: " + status;
+    }
+}
+
+// Classe Principal
+public class Main {
+    private static ArrayList<Chamado> listaChamados = new ArrayList<>();
+    private static int contadorChamados = 1;
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        cadastrarExemplos(); // Cadastra 5 chamados de exemplo automaticamente
+
+        int opcao = 0;
+        do {
+            exibirMenu();
+            try {
+                opcao = Integer.parseInt(scanner.nextLine());
+                processarOpcao(opcao);
+            } catch (NumberFormatException e) {
+                System.out.println("Por favor, digite um número válido.");
+            }
+        } while (opcao != 7);
+    }
+
+    private static void exibirMenu() {
+        System.out.println("\n=== SISTEMA DE SUPORTE DE TI ===");
+        System.out.println("1 - Abrir novo chamado");
+        System.out.println("2 - Listar todos os chamados");
+        System.out.println("3 - Buscar chamado pelo número");
+        System.out.println("4 - Alterar o status de um chamado");
+        System.out.println("5 - Listar chamados de alta prioridade");
+        System.out.println("6 - Exibir relatório de chamados por status (Desafio Extra)");
+        System.out.println("7 - Sair do sistema");
+        System.out.print("Escolha uma opção: ");
+    }
+
+    private static void processarOpcao(int opcao) {
+        switch (opcao) {
+            case 1: abrirChamado(); break;
+            case 2: listarChamados(); break;
+            case 3: buscarChamado(); break;
+            case 4: alterarStatus(); break;
+            case 5: listarAltaPrioridade(); break;
+            case 6: exibirRelatorio(); break;
+            case 7: System.out.println("Encerrando o sistema. Até logo!"); break;
+            default: System.out.println("Opção inválida! Tente novamente.");
+        }
+    }
+
+    private static void abrirChamado() {
+        System.out.println("\n--- ABRIR NOVO CHAMADO ---");
+        String solicitante = lerCampoObrigatorio("Nome do solicitante: ");
+        String descricao = lerCampoObrigatorio("Descrição do problema: ");
+        String categoria = lerCampoObrigatorio("Categoria (ex: Hardware, Rede, Software): ");
+        String prioridade = lerOpcao("Prioridade (Baixa, Média, Alta): ", new String[]{"Baixa", "Média", "Alta"});
+        
+        Chamado novoChamado = new Chamado(contadorChamados++, solicitante, descricao, categoria, prioridade, "Aberto");
+        listaChamados.add(novoChamado);
+        System.out.println("Chamado #" + novoChamado.getNumero() + " aberto com sucesso!");
+    }
+
+    private static void listarChamados() {
+        System.out.println("\n--- LISTA DE TODOS OS CHAMADOS ---");
+        if (listaChamados.isEmpty()) {
+            System.out.println("Nenhum chamado registrado.");
+            return;
+        }
+        for (Chamado c : listaChamados) {
+            System.out.println(c);
+        }
+    }
+
+    private static void buscarChamado() {
+        System.out.print("\nDigite o número do chamado: ");
+        try {
+            int numero = Integer.parseInt(scanner.nextLine());
+            Chamado encontrado = encontrarChamadoPorNumero(numero);
+            if (encontrado != null) {
+                System.out.println("Chamado encontrado:");
+                System.out.println(encontrado);
+            } else {
+                System.out.println("Erro: O chamado número " + numero + " não existe.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Número inválido.");
+        }
+    }
+
+    private static void alterarStatus() {
+        System.out.print("\nDigite o número do chamado para alterar o status: ");
+        try {
+            int numero = Integer.parseInt(scanner.nextLine());
+            Chamado chamado = encontrarChamadoPorNumero(numero);
+            if (chamado != null) {
+                System.out.println("Status atual: " + chamado.getStatus());
+                String novoStatus = lerOpcao("Novo Status (Aberto, Em atendimento, Concluído): ", 
+                                             new String[]{"Aberto", "Em atendimento", "Concluído"});
+                chamado.setStatus(novoStatus);
+                System.out.println("Status atualizado com sucesso!");
+            } else {
+                System.out.println("Erro: Chamado não encontrado.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Número inválido.");
+        }
+    }
+
+    private static void listarAltaPrioridade() {
+        System.out.println("\n--- CHAMADOS DE ALTA PRIORIDADE ---");
+        boolean encontrou = false;
+        for (Chamado c : listaChamados) {
+            if (c.getPrioridade().equalsIgnoreCase("Alta")) {
+                System.out.println(c);
+                encontrou = true;
+            }
+        }
+        if (!encontrou) {
+            System.out.println("Nenhum chamado de alta prioridade encontrado.");
+        }
+    }
+
+    private static void exibirRelatorio() {
+        System.out.println("\n--- RELATÓRIO DE CHAMADOS (DESAFIO EXTRA) ---");
+        int abertos = 0, emAtendimento = 0, concluidos = 0;
+
+        for (Chamado c : listaChamados) {
+            if (c.getStatus().equalsIgnoreCase("Aberto")) abertos++;
+            else if (c.getStatus().equalsIgnoreCase("Em atendimento")) emAtendimento++;
+            else if (c.getStatus().equalsIgnoreCase("Concluído")) concluidos++;
+        }
+
+        System.out.println("Total de chamados: " + listaChamados.size());
+        System.out.println("Abertos: " + abertos);
+        System.out.println("Em atendimento: " + emAtendimento);
+        System.out.println("Concluídos: " + concluidos);
+    }
+
+    // Métodos Auxiliares
+    private static Chamado encontrarChamadoPorNumero(int numero) {
+        for (Chamado c : listaChamados) {
+            if (c.getNumero() == numero) return c;
+        }
+        return null;
+    }
+
+    private static String lerCampoObrigatorio(String mensagem) {
+        String input;
+        do {
+            System.out.print(mensagem);
+            input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                System.out.println("Este campo é obrigatório. Não pode ficar vazio.");
+            }
+        } while (input.isEmpty());
+        return input;
+    }
+
+    private static String lerOpcao(String mensagem, String[] opcoesValidas) {
+        String input;
+        boolean valido = false;
+        do {
+            System.out.print(mensagem);
+            input = scanner.nextLine().trim();
+            for (String opcao : opcoesValidas) {
+                if (input.equalsIgnoreCase(opcao)) {
+                    valido = true;
+                    input = opcao; // Padroniza a capitalização
+                    break;
+                }
+            }
+            if (!valido) {
+                System.out.println("Opção inválida. Digite exatamente uma das opções fornecidas.");
+            }
+        } while (!valido);
+        return input;
+    }
+
+    private static void cadastrarExemplos() {
+        listaChamados.add(new Chamado(contadorChamados++, "Ana Silva", "PC não liga", "Hardware", "Alta", "Aberto"));
+        listaChamados.add(new Chamado(contadorChamados++, "João Souza", "Sem acesso à internet", "Rede", "Média", "Em atendimento"));
+        listaChamados.add(new Chamado(contadorChamados++, "Maria Lima", "Impressora atolada", "Hardware", "Baixa", "Aberto"));
+        listaChamados.add(new Chamado(contadorChamados++, "Carlos Mendes", "Sistema escolar travando", "Software", "Alta", "Em atendimento"));
+        listaChamados.add(new Chamado(contadorChamados++, "Fernanda Costa", "Esqueceu a senha do e-mail", "Software", "Média", "Concluído"));
+    }
+}
